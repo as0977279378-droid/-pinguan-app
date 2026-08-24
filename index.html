@@ -48,7 +48,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 <div class="card">
 <div class="qhead"><span id="qid"></span><span id="modeText"></span></div>
 <div id="qtext" class="qtext"></div><div id="options" class="options"></div><div id="feedback"></div>
-<div id="listenPanel" class="hidden" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px"><label>🎧 聽題控制</label><div class="toolbar"><button class="primary" id="speakBtn">▶️ 播放</button><button class="secondary" id="pauseSpeakBtn">⏸️ 暫停/繼續</button><button class="secondary" id="repeatSpeakBtn">🔁 重播</button></div><div style="margin-top:10px"><label>語速</label><select id="speechRate"><option value="0.75">0.75×</option><option value="1" selected>1.0×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div><p class="small">朗讀題目與選項；按「下一題」後可繼續朗讀。</p></div><div class="toolbar"><button class="secondary" id="prevBtn">上一題</button><button class="primary" id="nextBtn">下一題</button><button class="danger" id="finishBtn">交卷</button></div>
+<div id="listenPanel" class="hidden" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px"><label>🎧 聽題控制</label><div class="toolbar"><button class="primary" id="speakBtn">▶️ 播放</button><button class="secondary" id="pauseSpeakBtn">⏸️ 暫停/繼續</button><button class="secondary" id="repeatSpeakBtn">🔁 重播</button></div><div class="grid" style="margin-top:10px"><div><label>語速</label><select id="speechRate"><option value="0.75">0.75×</option><option value="1" selected>1.0×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></div><div><label>公布答案前等待</label><select id="answerDelay"><option value="2">2 秒</option><option value="4" selected>4 秒</option><option value="6">6 秒</option><option value="10">10 秒</option></select></div></div><p class="small">會先朗讀題目與選項，等待後再朗讀「正確答案是 X，選項內容」。</p></div><div class="toolbar"><button class="secondary" id="prevBtn">上一題</button><button class="primary" id="nextBtn">下一題</button><button class="danger" id="finishBtn">交卷</button></div>
 </div>
 </section>
 
@@ -118,12 +118,98 @@ $("clearWrongBtn").onclick=()=>{if(confirm("確定清除所有錯題紀錄？"))
 $("prevBtn").onclick=()=>{if(idx>0){idx--;render()}};$("nextBtn").onclick=()=>{if(idx<quiz.length-1){idx++;render()}else finish()};
 $("finishBtn").onclick=finish;$("backBtn").onclick=()=>{$("result").classList.add("hidden");$("setup").classList.remove("hidden");window.scrollTo(0,0)};
 $("retryWrongBtn").onclick=()=>{if(sessionWrong.length){$("mode").value="practice";start(sessionWrong)}};
-/* 聽題學習功能 */
-function speakCurrent(){if(!('speechSynthesis' in window)){alert('此瀏覽器不支援語音朗讀');return}speechSynthesis.cancel();const t=$('qtext').innerText+'。'+[...$('options').children].map(x=>x.innerText).join('。');const u=new SpeechSynthesisUtterance(t);u.lang='zh-TW';u.rate=parseFloat($('speechRate').value||1);speechSynthesis.speak(u)}
-$('speakBtn').onclick=speakCurrent;$('repeatSpeakBtn').onclick=speakCurrent;$('pauseSpeakBtn').onclick=()=>{if(speechSynthesis.paused)speechSynthesis.resume();else speechSynthesis.pause()};
-const oldStart=$('startBtn').onclick;$('startBtn').onclick=()=>{oldStart();const on=$('mode').value==='listen';$('listenPanel').classList.toggle('hidden',!on);if(on)setTimeout(speakCurrent,500)};
-const oldNext=$('nextBtn').onclick;$('nextBtn').onclick=()=>{speechSynthesis.cancel();oldNext();if($('mode').value==='listen'&&!$('quiz').classList.contains('hidden'))setTimeout(speakCurrent,400)};
-const oldPrev=$('prevBtn').onclick;$('prevBtn').onclick=()=>{speechSynthesis.cancel();oldPrev();if($('mode').value==='listen')setTimeout(speakCurrent,400)};
+/* 聽題學習功能：題目 → 選項 → 等待 → 正確答案 */
+let listenTimer=null;
+let listenSeq=0;
+
+function stopSpeech(){
+  listenSeq++;
+  clearTimeout(listenTimer);
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function speakText(text, onend){
+  if(!('speechSynthesis' in window)){
+    alert('此瀏覽器不支援語音朗讀');
+    return;
+  }
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='zh-TW';
+  u.rate=parseFloat($('speechRate').value||1);
+  u.onend=()=>{ if(onend) onend(); };
+  speechSynthesis.speak(u);
+}
+
+function answerSpeech(){
+  const q=quiz[idx];
+  if(!q) return '找不到答案';
+  const p=parseOptions(q.text);
+  const opt=p.opts.find(o=>o.letter===q.answer);
+  return opt ? `正確答案是 ${q.answer}，${opt.text}` : `正確答案是 ${q.answer}`;
+}
+
+function speakCurrent(){
+  stopSpeech();
+  const seq=listenSeq;
+  const q=quiz[idx];
+  if(!q) return;
+
+  const p=parseOptions(q.text);
+  let parts=[`第 ${idx+1} 題。${p.stem||q.text}`];
+  for(const o of p.opts){
+    parts.push(`選項 ${o.letter}，${o.text}`);
+  }
+  const questionText=parts.join('。');
+
+  speakText(questionText, ()=>{
+    if(seq!==listenSeq) return;
+    const delay=(parseFloat($('answerDelay')?.value||4))*1000;
+    listenTimer=setTimeout(()=>{
+      if(seq!==listenSeq) return;
+      speakText(answerSpeech());
+    }, delay);
+  });
+}
+
+$('speakBtn').onclick=speakCurrent;
+$('repeatSpeakBtn').onclick=speakCurrent;
+$('pauseSpeakBtn').onclick=()=>{
+  if(!('speechSynthesis' in window)) return;
+  if(speechSynthesis.paused) speechSynthesis.resume();
+  else speechSynthesis.pause();
+};
+
+const oldStart=$('startBtn').onclick;
+$('startBtn').onclick=()=>{
+  oldStart();
+  const on=$('mode').value==='listen';
+  $('listenPanel').classList.toggle('hidden',!on);
+  if(on) setTimeout(speakCurrent,600);
+};
+
+const oldNext=$('nextBtn').onclick;
+$('nextBtn').onclick=()=>{
+  stopSpeech();
+  oldNext();
+  if($('mode').value==='listen'&&!$('quiz').classList.contains('hidden')){
+    setTimeout(speakCurrent,500);
+  }
+};
+
+const oldPrev=$('prevBtn').onclick;
+$('prevBtn').onclick=()=>{
+  stopSpeech();
+  oldPrev();
+  if($('mode').value==='listen'){
+    setTimeout(speakCurrent,500);
+  }
+};
+
+const oldFinish=$('finishBtn').onclick;
+$('finishBtn').onclick=()=>{ stopSpeech(); oldFinish(); };
+
+const oldBack=$('backBtn').onclick;
+$('backBtn').onclick=()=>{ stopSpeech(); oldBack(); };
 
 init();
 </script>
