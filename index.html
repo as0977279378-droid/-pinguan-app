@@ -74,7 +74,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 <div class="card">
 <div class="qhead"><span id="qid"></span><span id="modeText"></span></div>
 <div id="qtext" class="qtext"></div><div id="options" class="options"></div><div id="feedback"></div>
-<div id="listenPanel" class="hidden" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px"><label>🎧 聽題控制</label><div class="toolbar"><button class="primary" id="speakBtn">▶️ 播放</button><button class="secondary" id="pauseSpeakBtn">⏸️ 暫停/繼續</button><button class="secondary" id="repeatSpeakBtn">🔁 重播</button></div><div class="grid" style="margin-top:10px"><div><label>語速</label><select id="speechRate"><option value="0.8">0.8×</option><option value="0.9" selected>0.9×（推薦）</option><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option></select></div><div><label>公布答案前等待</label><select id="answerDelay"><option value="2">2 秒</option><option value="4" selected>4 秒</option><option value="6">6 秒</option><option value="10">10 秒</option></select></div><div><label>播放方式</label><select id="listenPlayMode"><option value="continuous" selected>🔁 連續播放</option><option value="single">1️⃣ 單題播放</option></select></div><div><label>中文語音</label><select id="voiceSelect"><option value="">美佳（zh-TW）－預設</option></select></div></div><p class="small">自然導讀：題目與各選項會分段朗讀並加入停頓；答案會再複習一次。連續播放可自動進入下一題。</p></div><div class="toolbar"><button class="secondary" id="prevBtn">上一題</button><button class="primary" id="nextBtn">下一題</button><button class="danger" id="finishBtn">交卷</button></div>
+<div id="listenPanel" class="hidden" style="margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:12px"><label>🎧 聽題控制</label><div class="toolbar"><button class="primary" id="speakBtn">▶️ 播放</button><button class="secondary" id="pauseSpeakBtn">⏸️ 暫停/繼續</button><button class="secondary" id="repeatSpeakBtn">🔁 重播</button></div><div class="grid" style="margin-top:10px"><div><label>語速</label><select id="speechRate"><option value="0.8">0.8×</option><option value="0.9" selected>0.9×（推薦）</option><option value="1">1.0×</option><option value="1.1">1.1×</option><option value="1.25">1.25×</option></select></div><div><label>公布答案前等待</label><select id="answerDelay"><option value="2">2 秒</option><option value="4" selected>4 秒</option><option value="6">6 秒</option><option value="10">10 秒</option></select></div><div><label>播放方式</label><select id="listenPlayMode"><option value="continuous" selected>🔁 連續播放</option><option value="single">1️⃣ 單題播放</option></select></div><div><label>中文語音</label><select id="voiceSelect"><option value="">正在載入美佳（zh-TW）…</option></select></div></div><p class="small">自然導讀：題目與各選項會分段朗讀並加入停頓；答案會再複習一次。連續播放可自動進入下一題。</p></div><div class="toolbar"><button class="secondary" id="prevBtn">上一題</button><button class="primary" id="nextBtn">下一題</button><button class="danger" id="finishBtn">交卷</button></div>
 </div>
 </section>
 
@@ -229,25 +229,46 @@ function stopSpeech(){
 }
 
 let zhVoices=[];
+let didAutoSelectMeijia=false;
 function loadZhVoices(){
   if(!('speechSynthesis' in window)) return;
   const all=speechSynthesis.getVoices();
   zhVoices=all.filter(v=>/^zh[-_]/i.test(v.lang)||/Chinese|中文|國語|Mandarin/i.test(v.name));
   const sel=$('voiceSelect');
   if(!sel) return;
-  const keep=sel.value;
-  sel.innerHTML='<option value="">美佳（zh-TW）－預設</option>';
+
+  const previousName = sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex]?.textContent : "";
+  sel.innerHTML='';
   zhVoices.forEach((v,i)=>{
     const o=document.createElement('option');
     o.value=String(i);
     o.textContent=`${v.name}（${v.lang}）`;
     sel.appendChild(o);
   });
-  if([...sel.options].some(o=>o.value===keep)) sel.value=keep;
+
+  // 第一次載入時，真正把下拉選單選到「美佳（zh-TW）」。
+  if(!didAutoSelectMeijia){
+    let meiIndex=zhVoices.findIndex(v=>/美佳/i.test(v.name) && /^zh[-_]TW$/i.test(v.lang));
+    if(meiIndex<0) meiIndex=zhVoices.findIndex(v=>/美佳/i.test(v.name));
+    if(meiIndex>=0){
+      sel.value=String(meiIndex);
+      didAutoSelectMeijia=true;
+      return;
+    }
+  }
+
+  // 使用者手動換過聲音時，盡量保留原本選擇。
+  const previousIndex=zhVoices.findIndex(v=>`${v.name}（${v.lang}）`===previousName);
+  if(previousIndex>=0) sel.value=String(previousIndex);
+  else if(zhVoices.length) sel.value='0';
 }
 if('speechSynthesis' in window){
   loadZhVoices();
   speechSynthesis.onvoiceschanged=loadZhVoices;
+  // iPhone Safari 有時語音清單較晚才載入，多嘗試幾次。
+  setTimeout(loadZhVoices,300);
+  setTimeout(loadZhVoices,1000);
+  setTimeout(loadZhVoices,2000);
 }
 
 function naturalizeSpeech(text){
@@ -266,12 +287,12 @@ function naturalizeSpeech(text){
 
 function chosenVoice(){
   const sel=$('voiceSelect');
-  if(sel && sel.value!=='') return zhVoices[Number(sel.value)]||null;
-  // 預設優先使用 iPhone 的「美佳」繁體中文語音。
+  // 下拉選單若已有實際選中的聲音，就直接使用。
+  if(sel && sel.value!=='' && zhVoices[Number(sel.value)]) return zhVoices[Number(sel.value)];
+  // 保險：仍優先尋找「美佳（zh-TW）」。
   return zhVoices.find(v=>/美佳/i.test(v.name) && /^zh[-_]TW$/i.test(v.lang))
       || zhVoices.find(v=>/美佳/i.test(v.name))
       || zhVoices.find(v=>/^zh[-_]TW$/i.test(v.lang))
-      || zhVoices.find(v=>/Taiwan|臺灣|台灣/i.test(v.name))
       || zhVoices[0] || null;
 }
 
