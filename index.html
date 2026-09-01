@@ -64,7 +64,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 </style>
 </head>
 <body>
-<header><h1>公共工程品質管理（土建）模擬練習</h1><p>115年1月起適用題庫｜共 <span id="totalCount"></span> 題｜離線可用</p></header>
+<header>
+<h1>公共工程品質管理（土建）模擬練習</h1>
+<p>115年1月起適用題庫｜共 <span id="totalCount"></span> 題｜離線可用</p>
+<p style="margin-top:8px;font-weight:800;font-size:15px">✅ 版本：重點背誦版 2026-09-01</p>
+</header>
 <main>
 <section id="setup" class="card">
 <h2>開始練習</h2>
@@ -73,7 +77,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 <div><label>題目數量</label><input id="count" type="number" min="1" value="50"></div>
 <div class="full"><label>選擇單元（可複選）</label><div class="checks" id="categories"></div></div>
 </div>
-<div class="toolbar"><button class="primary" id="startBtn">開始出題</button><button class="secondary" id="confuseBtn">🧠 易混淆重點</button><button class="secondary" id="studyBtn">📚 重點背誦</button><button class="secondary" id="allBtn">全選單元</button><button class="secondary" id="noneBtn">取消全選</button><button class="danger" id="clearWrongBtn">清除錯題紀錄</button></div>
+<div class="toolbar"><button class="primary" id="startBtn">開始出題</button><button class="primary" id="studyBtn">📚 重點背誦</button><button class="secondary" id="confuseBtn">🧠 易混淆重點</button><button class="secondary" id="allBtn">全選單元</button><button class="secondary" id="noneBtn">取消全選</button><button class="danger" id="clearWrongBtn">清除錯題紀錄</button></div>
 <p class="small" id="wrongInfo"></p><p class="small">🔥 錯題強化：答錯會重新排到後面；每題必須連續答對 2 次才會從錯題池移除。</p>
 <div class="chapter-progress-wrap">
   <div class="chapter-progress-head">
