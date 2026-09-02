@@ -61,13 +61,25 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 .study-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 @media(max-width:760px){.study-grid{grid-template-columns:1fr}}
 
+
+.answer-explain{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--card)}
+.answer-explain-title{font-weight:800;margin-bottom:8px;font-size:16px}
+.answer-explain-hint{font-size:13px;color:var(--muted);margin-bottom:9px;line-height:1.55}
+.answer-explain-row{border-top:1px solid var(--line);padding:9px 4px;line-height:1.55;font-size:14px}
+.answer-explain-row:first-of-type{border-top:0}
+.answer-explain-row .opt-letter{display:inline-block;min-width:28px;font-weight:800}
+.answer-explain-row.good{background:rgba(22,163,74,.055)}
+.answer-explain-row.bad{background:rgba(220,38,38,.055)}
+.answer-explain-note{display:block;margin-left:28px;color:var(--muted);font-size:13px;margin-top:3px}
+
+.story-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}.story-card{border:1px solid var(--line);border-radius:16px;padding:15px;background:var(--card)}.story-scene{font-size:42px;text-align:center;padding:8px 0}.story-card h3{margin:3px 0 8px;font-size:18px}.story-text{line-height:1.8;font-size:15px}.story-memory{margin-top:10px;padding:10px;border-radius:12px;background:rgba(16,185,129,.08);font-weight:800}.story-key{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.6}.story-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}@media(max-width:760px){.story-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
 <h1>公共工程品質管理（土建）模擬練習</h1>
 <p>115年1月起適用題庫｜共 <span id="totalCount"></span> 題｜離線可用</p>
-<p style="margin-top:8px;font-weight:800;font-size:15px">✅ 版本：重點背誦版 2026-09-01</p>
+<p style="margin-top:8px;font-weight:800;font-size:15px">✅ 版本：圖像＋故事聯想版 2026-09-02</p>
 </header>
 <main>
 <section id="setup" class="card">
@@ -77,7 +89,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 <div><label>題目數量</label><input id="count" type="number" min="1" value="50"></div>
 <div class="full"><label>選擇單元（可複選）</label><div class="checks" id="categories"></div></div>
 </div>
-<div class="toolbar"><button class="primary" id="startBtn">開始出題</button><button class="primary" id="studyBtn">📚 重點背誦</button><button class="secondary" id="confuseBtn">🧠 易混淆重點</button><button class="secondary" id="allBtn">全選單元</button><button class="secondary" id="noneBtn">取消全選</button><button class="danger" id="clearWrongBtn">清除錯題紀錄</button></div>
+<div class="toolbar"><button class="primary" id="startBtn">開始出題</button><button class="primary" id="studyBtn">📚 重點背誦</button><button class="secondary" id="storyBtn">🎬 故事聯想</button><button class="secondary" id="confuseBtn">🧠 易混淆重點</button><button class="secondary" id="allBtn">全選單元</button><button class="secondary" id="noneBtn">取消全選</button><button class="danger" id="clearWrongBtn">清除錯題紀錄</button></div>
 <p class="small" id="wrongInfo"></p><p class="small">🔥 錯題強化：答錯會重新排到後面；每題必須連續答對 2 次才會從錯題池移除。</p>
 <div class="chapter-progress-wrap">
   <div class="chapter-progress-head">
@@ -94,6 +106,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:16px}
 
 
 
+<section id="storySection" class="hidden"><div class="card"><div class="confuse-top"><div><h2 style="margin-bottom:4px">🎬 圖像＋故事聯想</h2><p class="small" style="margin-top:0">先在腦中看到畫面，再聽故事，最後記一句口訣。故事只幫助聯想，正式答案仍以題庫為準。</p></div><button class="secondary" id="storyBackBtn">← 回首頁</button></div><input id="storySearch" class="study-filter" placeholder="搜尋：三級品管、柏拉圖、UT、材料送審…" /></div><div id="storyCards" class="story-grid"></div></section>
 <section id="studySection" class="hidden">
   <div class="card">
     <div class="confuse-top">
@@ -205,6 +218,11 @@ function updateWrongInfo(){
   const total=Object.values(counts).reduce((a,b)=>a+Number(b||0),0);
   $("wrongInfo").textContent=`目前錯題：${wrongIds().length} 題｜累積答錯：${total} 次`;
 }
+
+const MEMORY_STORIES=[{"topic":"三級品管","icon":"🏗️","title":"品質管理三層樓","story":"想像一棟三層樓的品質大樓。一樓是廠商，先拿檢查表自己檢查；二樓是監造，拿放大鏡抽查施工、抽驗材料；三樓是主管機關，最後做品質查核。","memory":"一廠、二監、三查","keys":"自主品管｜品質保證｜品質查核"},{"topic":"PDCA","icon":"🔄","title":"品質循環遊樂園","story":"坐上一台品質列車。第一站先畫地圖 Plan；第二站真的動手 Do；第三站拿放大鏡 Check；第四站把問題修好 Act，修完又回到第一站。","memory":"計畫、執行、檢查、改善","keys":"Plan｜Do｜Check｜Act"},{"topic":"監造與自主檢查","icon":"👷🔍","title":"工地兩個檢查員","story":"廠商先拿自己的表格檢查，這叫自主檢查。監造拿放大鏡看施工叫抽查；打開材料箱檢查材料叫抽驗。停留點就像紅燈，要先停下來等檢查。","memory":"自己查＝自主；監造施工＝抽查；監造材料＝抽驗","keys":"自主檢查｜施工抽查｜材料抽驗｜檢驗停留點"},{"topic":"傳統QC與新QC","icon":"🧰🗺️","title":"品管偵探工具箱","story":"QC偵探到工地破案。傳統QC像工具箱，拿工具檢查資料；新QC像事前作戰地圖，先把關係、路線與計畫畫清楚。","memory":"傳統QC偏 Check；新QC偏 Plan","keys":"QC七大手法｜新QC七大手法"},{"topic":"柏拉圖","icon":"📊","title":"抓最大嫌疑犯","story":"品質偵探面前站著一排高矮不同的嫌疑犯。最高的柱子最醒目，再沿著累積曲線追蹤，先抓造成大部分問題的重要少數。","memory":"柏拉抓重點","keys":"柱狀圖｜累積曲線｜重要少數"},{"topic":"特性要因圖","icon":"🐟","title":"魚骨追兇","story":"問題像魚頭，每根魚骨掛著可能原因。沿著骨頭一路往回追，就能幫助分析造成問題的原因。","memory":"魚骨找原因","keys":"特性要因圖｜魚骨圖｜原因分析"},{"topic":"散布圖","icon":"✨","title":"星星有沒有一起走","story":"天空有兩群星星。一顆往上時觀察另一顆是不是也跟著往上；點點排列的方向，幫你聯想到兩個變數的相關性。","memory":"散布看相關","keys":"兩變數｜相關性"},{"topic":"直方圖","icon":"🏙️","title":"資料住在哪一區","story":"每筆資料都是居民，搬進一棟棟相鄰的大樓。哪幾棟最高，就代表資料比較集中在哪個範圍。","memory":"直方看分布","keys":"次數分配｜集中位置｜分布形狀"},{"topic":"管制圖","icon":"🚧","title":"上下兩道警戒線","story":"道路有中心線，上下各有一道警戒線。品質數據像車子在路上跑；如果出現異常，就要注意製程是否穩定。","memory":"管制看穩定","keys":"中心線｜管制界限｜製程穩定"},{"topic":"材料送審與檢驗","icon":"📦","title":"材料進工地海關","story":"材料箱進工地前，先到文件櫃台看型錄與資料，像辦護照，這是送審；真正到貨後再開箱、抽樣、做試驗，像過海關驗貨。","memory":"先送審、再進料、再檢試驗","keys":"材料設備送審｜進場檢驗｜抽樣試驗"},{"topic":"TAF・ILAC・CNS","icon":"🧪🌏📘","title":"實驗室旅行團","story":"實驗室帶著認證證件出門先想到 TAF；走到國際機場遇到 ILAC，想到國際相互承認；手上抱著 CNS 國家標準。","memory":"TAF實驗室、ILAC國際、CNS國家標準","keys":"TAF｜ILAC｜CNS"},{"topic":"施工製造圖","icon":"✏️🏗️","title":"把模糊藍圖畫清楚","story":"工人拿到設計圖卻缺少施工細節，工程師拿出鉛筆，把真正要怎麼做、怎麼裝的細節深化，幫你想到施工製造圖。","memory":"設計不夠細，施工圖來深化","keys":"施工製造圖｜施工細節｜界面整合"},{"topic":"基礎開挖與管湧","icon":"🕳️💦","title":"地下水鑽地洞","story":"開挖一個大坑，地下水從透水地層底下往上鑽。看到透水性地層和高地下水，就提醒自己注意管湧等地下水問題。","memory":"透水地層＋高地下水＝警覺管湧","keys":"地下水｜透水性地層｜管湧"},{"topic":"鋼筋模板混凝土","icon":"🦴🧱🥛","title":"蓋房子的骨架與模具","story":"鋼筋像骨架，要注意位置、搭接與錨定；模板像模具固定外形；混凝土灌入後還要搗實與養護。","memory":"鋼筋骨、模板模、混凝土灌養","keys":"搭接｜錨定｜模板｜澆置｜搗實｜養護"},{"topic":"UT RT MT PT","icon":"🩺","title":"鋼鐵醫院","story":"鋼構到醫院檢查。UT像超音波、RT像X光，幫你聯想到內部；MT和PT則聯想到表面或近表面缺陷。","memory":"UT／RT看裡面；MT／PT找表面","keys":"非破壞檢測｜內部缺陷｜表面缺陷"},{"topic":"機水電數字題","icon":"🚿⚡📏","title":"機電數字走廊","story":"左邊水管掛壓力與時間牌，地板排水管掛坡度牌，右邊接地與避雷掛距離牌。看到數字先找它屬於哪個系統，不要混在一起。","memory":"壓力、時間、坡度、距離分房間背","keys":"水壓試驗｜排水坡度｜接地｜避雷"},{"topic":"瀝青混凝土","icon":"🚚🛣️","title":"五站鋪路旅行","story":"瀝青卡車一路經過五個站：先拌好、再運送、接著鋪開、壓實，最後接受檢驗。","memory":"拌、運、鋪、壓、驗","keys":"瀝青｜鋪築｜滾壓｜壓實度｜檢驗"},{"topic":"工程品質稽核","icon":"🕵️📋","title":"品質稽核小隊","story":"稽核小隊出發前先規劃。組長負責分工、主持會議與報告；稽核員拿查對表逐項查；專家提供專業知識。","memory":"組長管全局，稽核員拿表查，專家供知識","keys":"稽核組長｜稽核員｜查對表｜專家｜改正行動"}];
+function showStories(){stopSpeech();$("setup").classList.add("hidden");$("quiz").classList.add("hidden");$("result").classList.add("hidden");$("confuseSection").classList.add("hidden");$("studySection").classList.add("hidden");$("storySection").classList.remove("hidden");$("storySearch").value="";renderStories("");window.scrollTo(0,0)}
+function hideStories(){stopSpeech();$("storySection").classList.add("hidden");$("setup").classList.remove("hidden");updateChapterProgress();window.scrollTo(0,0)}
+function renderStories(keyword=""){const k=String(keyword||"").trim().toLowerCase();const rows=MEMORY_STORIES.filter(x=>!k||[x.topic,x.title,x.story,x.memory,x.keys].join(" ").toLowerCase().includes(k));$("storyCards").innerHTML=rows.map((x,i)=>`<div class="story-card"><div class="story-scene">${x.icon}</div><h3>${escapeHtml(x.topic)}｜${escapeHtml(x.title)}</h3><div class="story-text">${escapeHtml(x.story)}</div><div class="story-memory">🧠 口訣：${escapeHtml(x.memory)}</div><div class="story-key"><b>考試關鍵字：</b>${escapeHtml(x.keys)}</div><div class="story-actions"><button class="secondary story-speak" data-i="${i}">🔊 美佳朗讀故事</button></div></div>`).join("")||'<div class="card">找不到符合的故事。</div>';document.querySelectorAll(".story-speak").forEach(b=>b.onclick=()=>{const x=rows[Number(b.dataset.i)];if(!x)return;stopSpeech();speakText(`${x.topic}。${x.title}。${x.story}。記憶口訣，${x.memory}。考試關鍵字，${x.keys}。`)})}
 
 const STUDY_CHAPTERS=[{"title":"單元一： 政府採購全生命週期概論","keys":["工程經費編列","基本設計與替選方案","物價調整","招標條件","履約與估驗","循環經濟材料"],"memory":"從計畫與經費一路看到招標、施工、履約、驗收。題目常考金額門檻、保留款、物調與契約條件。","compare":[["工程建造費","注意哪些項目屬於直接／間接工程成本、預備費，哪些不屬建造費"],["工程採購估驗","題庫常考保留款比例"],["契約書圖","避免材料綁標、設計責任不清、保固條件不合理"],["循環經濟","再生粒料、爐碴、AC刨除料等適材適所利用"]]},{"title":"單元一：第一章 公共工程施工品質管理制度理念與導入","keys":["三級品管","PDCA","監造單位","專任工程人員","品管人員","矯正與預防","品質紀錄"],"memory":"一廠商、二監造、三查核；品質管理靠 PDCA，缺失不能只修補，要追原因並做矯正與預防。","compare":[["監造單位","審施工／品質計畫、施工抽查、材料抽驗、監造報表"],["專任工程人員","督導按圖施工、處理技術問題、督察品質計畫落實"],["品管人員","品質計畫、內部品質稽核、矯正與預防追蹤"],["品質紀錄","應由正常品管過程自然產生，不是為查核臨時製作"]]},{"title":"單元一：第二章 公共工程管理相關法規概要","keys":["政府採購法","建築法","營造業法","技師法","水利法","公路法","綠建築","主管機關與金額期限"],"memory":"法規題先抓四件事：誰管、多少錢、幾天、要不要申請。主管機關和金額門檻最容易互換。","compare":[["工程巨額採購","題庫考 2 億元以上"],["公路主管機關","中央為交通部"],["市區道路主管機關","中央為內政部"],["土石採取法主管機關","中央為經濟部"],["綠建築","常考九大指標、候選證書、金額門檻"]]},{"title":"單元一：第三章 公共工程履約管理","keys":["契約變更","估驗計價","工期展延","驗收","減價收受","保固","付款期限","逾期違約金"],"memory":"施工中＝估驗、變更、展延；完工後＝初驗、驗收、付款、保固。數字一定分情境背。","compare":[["設計變更","注意未完成議價前的處理程序"],["減價收受","須符合不妨礙安全及使用等條件"],["初驗","題庫反覆考 30 日內"],["期限題","7 日、15 日、30 日要搭配情境記憶"]]},{"title":"單元一：第四章 永續公共工程","keys":["永續發展","節能減碳","生命週期","綠色材料","循環經濟","生態工程"],"memory":"永續不是只看施工成本，要看整個生命週期的環境、經濟與社會效益。","compare":[["生命週期","規劃、設計、施工、營運維護到拆除"],["綠色思維","減量、再利用、再生利用"],["工程決策","兼顧環境衝擊、資源效率及長期效益"]]},{"title":"單元一：第五章 工程倫理","keys":["工程師責任","公共安全","專業責任","雇主責任","廉潔","利益衝突","角色衝突","餽贈"],"memory":"核心就是安全、公正、專業、廉潔。遇到人情壓力但要維持公平公正，題庫歸在角色衝突。","compare":[["對社會","保障公共安全、造福人群"],["不倫理行為","圖利、違反公正廉潔"],["行政倫理","道德、責任、價值"],["角色衝突","不同角色期待互相衝突"]]},{"title":"單元二：第一章 監造計畫與品質計畫指導","keys":["監造計畫","品質計畫","施工要領","品質管理標準","自主檢查","施工抽查","檢驗停留點","材料送審"],"memory":"廠商自己查＝自主檢查；監造查施工＝抽查；監造查材料＝抽驗；停留點放在抽查時機。","compare":[["品質管理標準","先訂管理項目、標準、時機／頻率、方法與紀錄"],["自主檢查表","針對某一特定工作項目的施工成果"],["施工抽查","監造單位執行"],["檢驗停留點","屬抽查時機，不是抽查頻率"]]},{"title":"單元二：第二章 統計分析方法與應用","keys":["平均數","中位數","眾數","全距","標準差","變異係數","抽樣","常態分布","移動平均"],"memory":"集中趨勢看平均／中位／眾數；離散程度看全距、標準差；不同尺度比較常看變異係數。","compare":[["算術平均數","總和 ÷ 資料個數"],["標準差","資料離散程度"],["變異係數","相對離散程度"],["3點移動平均","題庫考從第 3 個個別值點位開始繪"]]},{"title":"單元二：第三章 品質分析方法與應用","keys":["傳統QC七大手法","新QC七大手法","柏拉圖","特性要因圖","散布圖","直方圖","管制圖","PDCA"],"memory":"傳統 QC 偏 Check；新 QC 偏 Plan。柏拉抓重點、魚骨找原因、散布看相關、直方看分布、管制看穩定。","compare":[["柏拉圖","柱狀圖＋累積曲線，抓重要少數"],["特性要因圖","分析原因，又稱魚骨圖"],["管制圖","常以平均值 ±3 個標準差為管制界限"],["新QC","親和、關聯、系統、矩陣、矩陣數據解析、PDPC、箭線"]]},{"title":"單元二：第四章 工程進料檢驗與管制","keys":["CNS","TAF","ILAC","材料設備送審","進場檢驗","抽樣試驗","不合格材料","倉儲管理"],"memory":"先送審、再進料、再檢試驗。送審管能不能用；檢試驗管驗了沒有、結果如何。","compare":[["TAF","實驗室認證相關"],["ILAC","國際實驗室認證相互承認組織"],["CNS","國家標準"],["ACI／ASTM／UL","題庫歸於學協會／團體標準類"],["不合格材料","進料階段與施工完成後的處理方式不同"]]},{"title":"單元二：第五章 施工管制與檢驗","keys":["施工計畫","施工圖","施工製造圖","施工檢驗","界面整合","檢驗停留點","不合格品管制"],"memory":"設計圖不夠施工用就要深化。施工製造圖用來補足設計圖未詳繪的施工細節。","compare":[["施工製造圖","依施工經驗深化建築、水電等細部"],["分項品質計畫","常考哪些項目應包含／不包含"],["施工檢驗","依標準、程序及停留點執行"]]},{"title":"單元二：第六章 基礎與開挖","keys":["土壤性質","地下水","擋土支撐","開挖","管湧","砂湧","隆起","基礎"],"memory":"看到透水性地層＋地下水位高，要警覺管湧；開挖題常把地層、水、支撐方式與災害原因配對。","compare":[["管湧 piping","常見於具透水性地層且地下水位高"],["開挖支撐","注意變形、接頭鬆弛、預力損失"],["施工災害","先判斷是水、土壓或支撐造成"]]},{"title":"單元二：第七章 鋼筋、模板、混凝土施工","keys":["鋼筋搭接","錨定","保護層","耐震配筋","模板","混凝土配比","澆置","搗實","養護","抗壓試驗"],"memory":"鋼筋背位置與搭接；模板背支撐與脫模；混凝土背配比、澆置、搗實、養護及試體。","compare":[["模板油","題庫考主要作用為防止混凝土與模板黏結"],["鋼筋","注意搭接位置、偏移處理、保護層"],["混凝土","施工品質從材料、拌和、運送、澆置到養護連續控制"]]},{"title":"單元二：第八章 鋼結構施工及檢驗基準","keys":["鋼材","銲接","高強度螺栓","銲道缺陷","UT","RT","MT","PT","表面處理","塗裝"],"memory":"內部缺陷先想 UT／RT；表面或近表面再想 MT／PT。高強度螺栓注意接合面與鎖緊順序。","compare":[["UT","題庫常考全滲透接頭銲道內部缺陷及鋼板夾層"],["SAW","潛弧銲接英文簡稱"],["高強度螺栓","不可任意以敲擊方式強迫入孔"],["切割／塗裝","常考施工特性與缺失"]]},{"title":"單元二：第九章 建築物機水電施工及檢驗基準","keys":["給水","排水","水壓試驗","接地","避雷","低壓設備","管線坡度","消防","空調"],"memory":"這章數字很多：壓力、時間、坡度、距離。一定要把同類數字集中背。","compare":[["排水坡度","題庫有地下室污排水幹管 1/100 等數字題"],["接地","哪些設備應接地、哪些不需接地"],["避雷","引線安全距離、接地極等常考數字"],["水壓試驗","系統完成後的加壓時間常考"]]},{"title":"單元二：第十章 瀝青混凝土路面施工及檢驗基準","keys":["瀝青材料","級配","透層","黏層","鋪築","滾壓","溫度","壓實度","平坦度","馬歇爾試驗"],"memory":"流程口訣：拌、運、鋪、壓、驗。數字題集中在材料用量、溫度、厚度、壓實與試驗。","compare":[["透層／黏層","用途、材料與使用量容易混"],["鋪築","注意溫度與施工條件"],["滾壓","控制壓實度和平坦度"],["檢驗","厚度、壓實、級配與馬歇爾性質"]]},{"title":"單元二：第十一章 工程品質稽核","keys":["稽核目的","稽核計畫","稽核組長","稽核員","查對表","稽核前會議","稽核後會議","改正行動"],"memory":"稽核是確認制度及執行成效，不是突襲抓錯。組長管規劃、分工與報告；稽核員編查對表並執行稽核。","compare":[["稽核組長","規劃、聯繫、工作分配、成員選擇、主持會議、撰寫報告"],["稽核員","編擬查對表、執行稽核"],["專家","提供專技知識，不實際執行稽核"],["改正行動","調查行動＋補救行動＋矯正行動"]]}];
 function showStudy(){
@@ -448,7 +466,68 @@ function choose(letter){
    showFeedback();
  }
 }
-function showFeedback(){const q=quiz[idx],ans=answers[q.id];[...$("options").children].forEach(b=>{if(b.dataset.letter===q.answer)b.classList.add("correct");if(b.dataset.letter===ans&&ans!==q.answer)b.classList.add("wrong")});$("feedback").innerHTML=`<div class="feedback ${ans===q.answer?"ok":"bad"}">${ans===q.answer?"答對了":"答錯了"}，正確答案：${q.answer}</div>`}
+
+function isReverseQuestion(stem){
+  const s=String(stem||"").replace(/\s/g,"");
+  return /何者為誤|何者有誤|何者錯誤|何者不正確|何者為非|何者非屬|何者不是|不包括|不包含|不屬於|下列何項有誤|下列何項錯誤/.test(s);
+}
+function optionExplanationHtml(q){
+  const p=parseOptions(q.text);
+  const reverse=isReverseQuestion(p.stem||q.text);
+  const opts=p.opts;
+  if(!opts.length) return "";
+
+  const hint=reverse
+    ? `⚠️ 這是反向題：題目要找「錯誤／不正確／不包括」的選項。因此題庫答案 ${q.answer} 代表它是題目要找的錯誤敘述。`
+    : `這是正向題：題庫答案 ${q.answer} 是符合題意的選項。`;
+
+  const rows=opts.map(o=>{
+    const isAns=o.letter===q.answer;
+    let note="";
+    let cls="";
+    if(reverse){
+      if(isAns){
+        note="❌ 題庫判定：此敘述不符合本題規定，所以它是本題要選的答案。";
+        cls="bad";
+      }else{
+        note="✅ 題庫判定：此敘述在本題中視為符合規定，因此不是本題答案。";
+        cls="good";
+      }
+    }else{
+      if(isAns){
+        note="✅ 題庫判定：此選項符合題意，是本題正確答案。";
+        cls="good";
+      }else{
+        note="❌ 題庫判定：此選項不符合本題題意，因此不是答案。";
+        cls="bad";
+      }
+    }
+    return `<div class="answer-explain-row ${cls}">
+      <span class="opt-letter">${o.letter}</span><b>${escapeHtml(o.text)}</b>
+      <span class="answer-explain-note">${note}</span>
+    </div>`;
+  }).join("");
+
+  return `<div class="answer-explain">
+    <div class="answer-explain-title">📖 A／B／C／D 選項解析</div>
+    <div class="answer-explain-hint">${hint}</div>
+    ${rows}
+    <div class="answer-explain-hint" style="margin-top:9px;margin-bottom:0">
+      記憶技巧：先看題幹是要找「正確」還是「錯誤」。原始題庫若只有答案、沒有完整法規解析，本頁只依題庫判定標示，不自行補造數值或規定。
+    </div>
+  </div>`;
+}
+
+function showFeedback(){
+ const q=quiz[idx],ans=answers[q.id];
+ [...$("options").children].forEach(b=>{
+   if(b.dataset.letter===q.answer)b.classList.add("correct");
+   if(b.dataset.letter===ans&&ans!==q.answer)b.classList.add("wrong");
+ });
+ $("feedback").innerHTML=
+   `<div class="feedback ${ans===q.answer?"ok":"bad"}">${ans===q.answer?"答對了":"答錯了"}，題庫答案：${q.answer}</div>`
+   + optionExplanationHtml(q);
+}
 function finish(){
  sessionWrong=[];
  let correct=0, answered=0, unanswered=0;
@@ -488,7 +567,8 @@ function finish(){
    }
    return `<div class="review-item">
      <div class="qtext">${q.id}. ${q.text}</div>
-     <div class="small">你的答案：${a}｜正確答案：${q.answer}｜累積答錯：${wrongCount(q.id)} 次｜${q.category}</div>
+     <div class="small">你的答案：${a}｜題庫答案：${q.answer}｜累積答錯：${wrongCount(q.id)} 次｜${q.category}</div>
+     ${optionExplanationHtml(q)}
    </div>`;
  }).join("");
 
@@ -496,7 +576,7 @@ function finish(){
  updateChapterProgress();
  window.scrollTo(0,0);
 }
-$("startBtn").onclick=()=>start();$("studyBtn").onclick=showStudy;$("studyBackBtn").onclick=hideStudy;$("studySearch").oninput=e=>renderStudy(e.target.value);
+$("startBtn").onclick=()=>start();$("storyBtn").onclick=showStories;$("storyBackBtn").onclick=hideStories;$("storySearch").oninput=e=>renderStories(e.target.value);$("studyBtn").onclick=showStudy;$("studyBackBtn").onclick=hideStudy;$("studySearch").oninput=e=>renderStudy(e.target.value);
 $("resetSeenBtn").onclick=()=>{
   if(confirm("確定要重設所有章節的出題進度嗎？\n錯題紀錄與錯誤次數不會被清除。")){
     localStorage.removeItem("qcSeenIds");
